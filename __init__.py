@@ -54,7 +54,7 @@ else:
 
 class ExportBlib(bpy.types.Operator, ExportHelper):
     bl_idname = "blib.export"
-    bl_label = "Blib Assets (.blib)"
+    bl_label = "Export BLIB"
     bl_description = "Save assets to .blib files"
 
     filename_ext = ".blib"
@@ -135,7 +135,7 @@ class ExportBlib(bpy.types.Operator, ExportHelper):
 
 class ImportBlib(bpy.types.Operator, ImportHelper):
     bl_idname = "blib.import"
-    bl_label = "Blib Assets (.blib)"
+    bl_label = "Import BLIB"
     bl_description = "Load assets from .blib files"
 
     filename_ext = ".blib"
@@ -208,10 +208,10 @@ class ImportBlib(bpy.types.Operator, ImportHelper):
         return {'FINISHED'}
 
 def menu_func_export(self, context):
-    self.layout.operator(ExportBlib.bl_idname)
+    self.layout.operator(ExportBlib.bl_idname, text="Blib Assets (.blib)")
 
 def menu_func_import(self, context):
-    self.layout.operator(ImportBlib.bl_idname)
+    self.layout.operator(ImportBlib.bl_idname, text="Blib Assets (.blib)")
 
 def register():
     #Generic asset item
