@@ -52,8 +52,9 @@ else:
 class AssetItem(bpy.types.PropertyGroup):
     name = StringProperty()
     state = BoolProperty(
-           description="Toggle export",
-           default=False)
+                description="Toggle export",
+                default=False
+            )
 
 
 ### PER ASSET TYPE EXPORT/IMPORT PROPERTIES ###
@@ -114,43 +115,43 @@ class CyclesImportProps(bpy.types.PropertyGroup):
         name="Import packed images",
         description="Import images/textures that were packed in the .blend file",
         default=True
-        )
+    )
     
     imge_import = BoolProperty(
         name="Import external images",
         description="Import images/textures that were separately saved on disc",
         default=True
-        )
+    )
     
     seq_import = BoolProperty(
         name="Import image sequences",
         description="Import image sequences",
         default=True
-        )
+    )
     
     mov_import = BoolProperty(
         name="Import movies",
         description="Import movies",
         default=True
-        )
+    )
     
     txti_import = BoolProperty(
         name="Import packed texts",
         description="Import text blocks that were packed in the .blend file",
         default=True
-        )
+    )
     
     txte_import = BoolProperty(
         name="Import external texts",
         description="Import text blocks that were separately saved on disc",
         default=True
-        )
+    )
     
     script_import = BoolProperty(
         name="Import external scripts",
         description='Import scripts that are only referenced by their path in a "script" node',
         default=True
-        )
+    )
     
     img_embed = EnumProperty(
         name="Pack Images",
@@ -158,9 +159,9 @@ class CyclesImportProps(bpy.types.PropertyGroup):
             ("True", "Yes", "Pack all images into .blend file"),
             ("False", "No", "Store all images externally"),
             ("None", "Auto", "Maintain setup from exported material")
-            ),
+        ),
         default="False"
-        )
+    )
     
     txt_embed = EnumProperty(
         name="Pack Texts",
@@ -168,28 +169,28 @@ class CyclesImportProps(bpy.types.PropertyGroup):
             ("True", "Yes", "Pack all texts into .blend file"),
             ("False", "No", "Store all texts externally"),
             ("None", "Auto", "Maintain setup from exported material")
-            ),
+        ),
         default="None"
-        )
+    )
     
     img_merge = BoolProperty(
         name="Reuse existing images",
         description="For duplicate images, use those already in your resource library instead of creating new a instance",
         default=True
-        )
+    )
     
     resource_path = StringProperty(
         name="Resource path",
         description="Directory to save external resources (images, texts...)",
         default=gen_resource_path(),
         subtype='DIR_PATH'
-        )
+    )
     
     skip_sha1 = BoolProperty(
         name="Skip checksum",
         description="Skip file corruption verification (only use if you manually edited the file, and know what you're doing)",
         default=False
-        )
+    )
 
 
 ### ASSET TYPE CONTAINERS ###
