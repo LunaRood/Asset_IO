@@ -32,7 +32,7 @@ bl_info = {
 import bpy
 
 from os import path
-from bpy.props import StringProperty, CollectionProperty, IntProperty, PointerProperty, EnumProperty
+from bpy.props import StringProperty, CollectionProperty, IntProperty, PointerProperty
 from bpy_extras.io_utils import ImportHelper, ExportHelper
 from .ops import BLIB_OT_select_all, BLIB_OT_select_none
 from .props import AssetItem, AssetList, BlibThings
