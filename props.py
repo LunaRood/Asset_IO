@@ -224,6 +224,16 @@ class BlibThings(bpy.types.PropertyGroup):
                  ("cycles_grp", "Cycles Node Group", "Node groups for Cycles renderer materials")]
     )
     
+    action = EnumProperty(
+        name = "Action to be taken",
+        items = (
+            ("replace", "Replace", "Replace existing files"),
+            ("rename", "Keep Both", "Append number at the end of file names"),
+            ("ignore", "Ignore", "Only export those files that don't yet exist")
+        ),
+        default = "replace"
+    )
+    
     assets = PointerProperty(type=AssetList)
     
     asset_types = {

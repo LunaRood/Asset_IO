@@ -32,7 +32,7 @@ bl_info = {
 import bpy
 
 from os import path
-from bpy.props import StringProperty, CollectionProperty, IntProperty, PointerProperty
+from bpy.props import StringProperty, CollectionProperty, IntProperty, PointerProperty, EnumProperty
 from bpy_extras.io_utils import ImportHelper, ExportHelper
 from .ops import BLIB_OT_select_all, BLIB_OT_select_none
 from .props import AssetItem, AssetList, BlibThings
@@ -52,14 +52,104 @@ else:
     else:
         from blib.exceptions import BlibException
 
+def uniquify_name(filepath):
+    num = 1
+    newpath = filepath
+    parts = path.splitext(filepath)
+    while path.isfile(newpath):
+        newpath = parts[0] + str(num) + parts[1]
+        num += 1
+    return newpath
+
+class ExportConfirmation(bpy.types.Operator):
+    bl_idname = "blib.export_confirm"
+    bl_label = "Some files to be exported already exist"
+    bl_description = "Select what to do with duplicate files"
+    
+    directory = StringProperty()
+    filename = StringProperty()
+    
+    ### All the code commented out in this class is not working because of a Blender bug, and shall be reactivated once fixed ###
+    # dup_assets = CollectionProperty(type=AssetItem)
+    # asset_index = IntProperty(default=0)
+    
+    def draw(self, context):
+        layout = self.layout
+        
+        layout.label("Action to be taken:")
+        layout.prop(context.scene.blib, "action", expand=True)
+        
+        # layout.template_list(asset_info["list_type"], "", self, "dup_assets", self, "asset_index")
+    
+    def invoke(self, context, event):
+        asset_type = context.scene.blib.export_type
+        asset = getattr(context.scene.blib.assets, asset_type)
+        assets = asset.assets
+        
+        for asset in assets:
+            if asset.state == True:
+                filepath = path.join(self.directory, "{}_{}.blib".format(path.splitext(self.filename)[0], asset.name))
+                if path.isfile(filepath):
+                    return context.window_manager.invoke_props_dialog(self)
+        
+        # for asset in assets:
+        #     if asset.state == True:
+        #         filepath = path.join(self.directory, "{}_{}.blib".format(path.splitext(self.filename)[0], asset.name))
+        #         if path.isfile(filepath):
+        #             dup_asset = self.dup_assets.add()
+        #             dup_asset.name = asset.name
+        #             dup_asset.state = True
+        
+        return self.execute(context)
+    
+    def execute(self, context):
+        asset_type = context.scene.blib.export_type
+        asset_info = context.scene.blib.asset_types[asset_type]
+        asset = getattr(context.scene.blib.assets, asset_type)
+        assets = asset.assets
+        props = asset.export_props
+        data = getattr(bpy.data, asset_info["data"])
+        
+        success = 0
+        failed = 0
+        
+        print()
+        
+        for asset in assets:
+            if asset.state == True:
+                filepath = path.join(self.directory, "{}_{}.blib".format(path.splitext(self.filename)[0], asset.name))
+                if context.scene.blib.action == "rename":
+                    filepath = uniquify_name(filepath)
+                elif context.scene.blib.action == "ignore":
+                    if path.isfile(filepath):
+                        continue
+                
+                print()
+                print("Initiating export of '{}'".format(asset.name))
+                try:
+                    asset_info["exp_func"](data[asset.name], filepath, **{prop: getattr(props, prop) for prop in asset_info["exp_props"]})
+                except BlibException as e:
+                    failed += 1
+                    self.report({'WARNING'}, "'{}' failed to export.".format(asset.name))
+                    print("'{}' failed to export, with the following error:".format(asset.name))
+                    print(e)
+                else:
+                    success += 1
+                    print("'{}' exported successfully.".format(asset.name))
+        
+        self.report({'INFO'}, "{} of {} successful exports. Check system console for more info".format(success, success + failed))
+        print()
+        print("{} of {} successful exports.".format(success, success + failed))
+        return {'FINISHED'}
+
 class ExportBlib(bpy.types.Operator, ExportHelper):
     bl_idname = "blib.export"
     bl_label = "Export BLIB"
     bl_description = "Save assets to .blib files"
 
     filename_ext = ".blib"
-    filter_glob = StringProperty(default="*.blib", options={'HIDDEN'})
-    directory = StringProperty(options={'HIDDEN'})
+    filter_glob = StringProperty(default="*.blib")
+    directory = StringProperty()
     filepath = StringProperty()
     filename = StringProperty(default="untitled")
     
@@ -100,38 +190,7 @@ class ExportBlib(bpy.types.Operator, ExportHelper):
         return {'RUNNING_MODAL'}
     
     def execute(self, context):
-        asset_type = context.scene.blib.export_type
-        asset_info = context.scene.blib.asset_types[asset_type]
-        asset = getattr(context.scene.blib.assets, asset_type)
-        assets = asset.assets
-        props = asset.export_props
-        data = getattr(bpy.data, asset_info["data"])
-        
-        success = 0
-        failed = 0
-        
-        print()
-        
-        for asset in assets:
-            if asset.state == True:
-                filepath = path.join(self.directory, "{}_{}.blib".format(path.splitext(self.filename)[0], asset.name))
-                print()
-                print("Initiating export of '{}'".format(asset.name))
-                try:
-                    asset_info["exp_func"](data[asset.name], filepath, **{prop: getattr(props, prop) for prop in asset_info["exp_props"]})
-                except BlibException as e:
-                    failed += 1
-                    self.report({'WARNING'}, "'{}' failed to export.".format(asset.name))
-                    print("'{}' failed to export, with the following error:".format(asset.name))
-                    print(e)
-                else:
-                    success += 1
-                    print("'{}' exported successfully.".format(asset.name))
-        
-        self.report({'INFO'}, "{} of {} successful exports. Check system console for more info".format(success, success + failed))
-        print()
-        print("{} of {} successful exports.".format(success, success + failed))
-        return {'FINISHED'}
+        return bpy.ops.blib.export_confirm('INVOKE_DEFAULT', directory=self.directory, filename=self.filename)
 
 class ImportBlib(bpy.types.Operator, ImportHelper):
     bl_idname = "blib.import"
@@ -139,8 +198,8 @@ class ImportBlib(bpy.types.Operator, ImportHelper):
     bl_description = "Load assets from .blib files"
 
     filename_ext = ".blib"
-    filter_glob = StringProperty(default="*.blib", options={'HIDDEN'})
-    directory = StringProperty(options={'HIDDEN'})
+    filter_glob = StringProperty(default="*.blib")
+    directory = StringProperty()
     files = CollectionProperty(type=bpy.types.PropertyGroup)
     
     def draw(self, context):
@@ -230,6 +289,7 @@ def register():
     #Operator registration
     bpy.utils.register_class(ExportBlib)
     bpy.utils.register_class(ImportBlib)
+    bpy.utils.register_class(ExportConfirmation)
     bpy.utils.register_class(BLIB_OT_select_all)
     bpy.utils.register_class(BLIB_OT_select_none)
     
@@ -260,5 +320,6 @@ def unregister():
     #Operator unregistration
     bpy.utils.unregister_class(ExportBlib)
     bpy.utils.unregister_class(ImportBlib)
+    bpy.utils.unregister_class(ExportConfirmation)
     bpy.utils.unregister_class(BLIB_OT_select_all)
     bpy.utils.unregister_class(BLIB_OT_select_none)
