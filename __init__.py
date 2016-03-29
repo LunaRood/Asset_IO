@@ -20,11 +20,11 @@
 
 bl_info = {
     "name": "Asset IO",
-    "description": "Import and export blender assets (.blib)",
+    "description": "Import and export Blender assets (.blib)",
     "author": "Luca Rood",
     "version": (0, 1, 0),
     "blender": (2, 76, 0),
-    "location": "File > Import-Export > Export Assets (.blib)",
+    "location": "File > Import-Export > Blib Assets (.blib)",
     "warning": "Beta version, might contain bugs.",
     "category": "Import-Export"
     }
